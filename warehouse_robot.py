@@ -25,6 +25,8 @@ import copy
 """
 
 NUM_POSITIONS = 5 # θέσεις αποθήκευσης 1..5(η 0 είναι η είσοδος)
+
+
 # ******** Operators
 # ******** Τελεστές
 
@@ -216,7 +218,6 @@ def extend_queue(queue, method):
 """ ----------------------------------------------------------------------------
 **** Problem depending functions
 **** ο κόσμος του προβλήματος (αν απαιτείται) και υπόλοιπες συναρτήσεις σχετικές με το πρόβλημα
-
 """
 
 def shelves_empty(state):
@@ -227,17 +228,22 @@ def shelves_empty(state):
                 return False
     return True
 
-""" Function that checks if current state is a goal state """
+""" Function that checks if current state is a goal state
+    Συνάρτηση που ελέγχει αν μια κατάσταση είναι τελική:
+    όλα τα δέματα έχουν φύγει από τις θέσεις, το ρομπότ είναι στην είσοδο και άδειο.
+    Δεν συγκρίνουμε με μία σταθερή λίστα (π.χ. [0,[0,0],[0,0],...]), γιατί το σχήμα
+    της τελικής κατάστασης εξαρτάται από το πόσα δέματα είχε κάθε θέση στην αρχή. """
 
-#def is_goal_state(state):
+def is_goal_state(state):
+    return state[0]==0 and shelves_empty(state) and state[-1]==[0,0,0]
 
 """ ----------------------------------------------------------------------------
 **** Basic recursive function to create search tree (recursive tree expansion)
 **** Βασική αναδρομική συνάρτηση για δημιουργία δέντρου αναζήτησης (αναδρομική επέκταση δέντρου)
 """
 
-def find_solution(front, queue, closed, goal, method):
-#def find_solution(front, queue, closed, method):
+
+def find_solution(front, queue, closed, method):
        
     if not front:
         print('_NO_SOLUTION_FOUND_')
@@ -247,13 +253,10 @@ def find_solution(front, queue, closed, goal, method):
         new_front.pop(0)
         new_queue=copy.deepcopy(queue)
         new_queue.pop(0)
-        find_solution(new_front, new_queue, closed, goal, method)
-        #find_solution(new_front, new_queue, closed, method)
+        find_solution(new_front, new_queue, closed, method)
     
-    #elif is_goal_state(front[0]):
-    elif front[0]==goal:
+    elif is_goal_state(front[0]):
         print('_GOAL_FOUND_')
-        #print(front[0])
         print(queue[0])
         
     else:
@@ -263,8 +266,7 @@ def find_solution(front, queue, closed, goal, method):
         queue_copy=copy.deepcopy(queue)
         queue_children=extend_queue(queue_copy, method)
         closed_copy=copy.deepcopy(closed)
-        find_solution(front_children, queue_children, closed_copy, goal, method)
-        #find_solution(front_children, queue_children, closed_copy, method)
+        find_solution(front_children, queue_children, closed_copy, method)
         
         
         
@@ -276,7 +278,6 @@ def find_solution(front, queue, closed, goal, method):
 def main():
     
     initial_state = [0, [12,15], [8,11], [3,9,7], [6,2,13], [10,4], [0,0,0]] 
-    goal = [0, [0,0], [0,0], [0,0,0], [0,0,0], [0,0], [0,0,0]]
     method='DFS'
     
     """ ----------------------------------------------------------------------------
@@ -285,8 +286,7 @@ def main():
     """
     
     print('____BEGIN__SEARCHING____')
-    find_solution(make_front(initial_state), make_queue(initial_state), [], goal, method)
-    #find_solution(make_front(initial_state), make_queue(initial_state), [], method)
+    find_solution(make_front(initial_state), make_queue(initial_state), [], method)
     
     
 if __name__ == "__main__":
