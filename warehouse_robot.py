@@ -237,9 +237,22 @@ def shelves_empty(state):
 def is_goal_state(state):
     return state[0]==0 and shelves_empty(state) and state[-1]==[0,0,0]
 
+
+def operator_name(parent, child):
+    """Ποιος τελεστής οδήγησε από την parent στην child (για την εκτύπωση της λύσης).
+    Ο move_left καταλήγει πάντα σε θέση 1..4 και ο move_right σε θέση 1..5,
+    ενώ ο unload πάντα στην είσοδο (0), οπότε αρκεί να δούμε τη θέση του ρομπότ."""
+    if child[0]>=1 and child[0]==parent[0]-1:
+        return 'move_left'
+    if child[0]==parent[0]+1:
+        return 'move_right'
+    return 'unload'
+
 """ ----------------------------------------------------------------------------
 **** Basic recursive function to create search tree (recursive tree expansion)
 **** Βασική αναδρομική συνάρτηση για δημιουργία δέντρου αναζήτησης (αναδρομική επέκταση δέντρου)
+ 
+  Επιστρέφει το μονοπάτι-λύση (λίστα καταστάσεων) ή None αν δεν υπάρχει λύση.
 """
 
 
@@ -247,17 +260,18 @@ def find_solution(front, queue, closed, method):
        
     if not front:
         print('_NO_SOLUTION_FOUND_')
+        return None
     
     elif front[0] in closed:
         new_front=copy.deepcopy(front)
         new_front.pop(0)
         new_queue=copy.deepcopy(queue)
         new_queue.pop(0)
-        find_solution(new_front, new_queue, closed, method)
+        return find_solution(new_front, new_queue, closed, method)
     
     elif is_goal_state(front[0]):
         print('_GOAL_FOUND_')
-        print(queue[0])
+        return queue[0]
         
     else:
         closed.append(front[0])
@@ -266,9 +280,16 @@ def find_solution(front, queue, closed, method):
         queue_copy=copy.deepcopy(queue)
         queue_children=extend_queue(queue_copy, method)
         closed_copy=copy.deepcopy(closed)
-        find_solution(front_children, queue_children, closed_copy, method)
+        return find_solution(front_children, queue_children, closed_copy, method)
         
-        
+
+def print_solution(path):
+    print('Λύση: %d ενέργειες (%d καταστάσεις στο μονοπάτι)' % (len(path)-1, len(path)))
+    for i, state in enumerate(path):
+        if i==0:
+            print('  %3d. %-11s %s' % (i, '(αρχική)', state))
+        else:
+            print('  %3d. %-11s %s' % (i, operator_name(path[i-1], state), state))   
         
 """ ----------------------------------------------------------------------------
 ** Executing the code
@@ -280,13 +301,13 @@ def main():
     initial_state = [0, [12,15], [8,11], [3,9,7], [6,2,13], [10,4], [0,0,0]] 
     method='DFS'
     
-    """ ----------------------------------------------------------------------------
-    **** starting search
-    **** έναρξη αναζήτησης
-    """
     
     print('____BEGIN__SEARCHING____')
-    find_solution(make_front(initial_state), make_queue(initial_state), [], method)
+    path=find_solution(make_front(initial_state), make_queue(initial_state), [], method)
+ 
+    print()
+    if path is not None:
+        print_solution(path)
     
     
 if __name__ == "__main__":
