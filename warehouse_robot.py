@@ -24,6 +24,7 @@ import copy
        [0, [12,15], [8,11], [3,9,7], [6,2,13], [10,4], [0,0,0]]
 """
 
+NUM_POSITIONS = 5 # θέσεις αποθήκευσης 1..5(η 0 είναι η είσοδος)
 # ******** Operators
 # ******** Τελεστές
 
@@ -87,8 +88,34 @@ def move_right(state):
 
 
 '''
-Συνάρτηση εύρεσης απογόνων της τρέχουσας κατάστασης
+Τελεστής unload: επιστροφή στην είσοδο και εκφόρτωση (μία ενέργεια)
+Προϋποθέσεις (μία από τις δύο):
+  α) το ρομπότ είναι γεμάτο (πληρότητα = 1). Τότε είναι και ο μόνος τελεστής που
+     εφαρμόζεται (οι move_left/move_right θέλουν πληρότητα 0), άρα η επιστροφή
+     γίνεται "αυτόματα", όπως λέει η εκφώνηση.
+  β) δεν έχει μείνει κανένα δέμα στις θέσεις και η δουλειά δεν έχει τελειώσει
+     (το ρομπότ κρατάει δέματα ή δεν είναι στην είσοδο). Χωρίς αυτή την περίπτωση
+     το τελευταίο φορτίο δεν θα έφτανε ποτέ στην είσοδο, αφού δεν θα υπήρχε
+     επόμενο δέμα για να "γεμίσει" το ρομπότ.
+Αποτέλεσμα  : το ρομπότ βρίσκεται στην είσοδο (θέση 0) και είναι άδειο [0,0,0].
 '''
+def unload(state):
+    full=state[-1][2]==1
+    finished=shelves_empty(state) and (state[-1][0]>0 or state[0]!=0)
+ 
+    if full or finished:
+        state[0]=0                                      # επιστροφή στην είσοδο
+        state[-1]=[0,0,0]                               # εκφόρτωση όλων των δεμάτων
+        return state
+
+'''
+Συνάρτηση εύρεσης απογόνων της τρέχουσας κατάστασης (συνάρτηση διαδόχων)
+Εφαρμόζει κάθε τελεστή σε ξεχωριστό αντίγραφο της κατάστασης (deepcopy), ώστε να
+μην αλλάξει η κατάσταση-γονέας, και κρατά μόνο όσους τελεστές εφαρμόστηκαν
+(οι τελεστές επιστρέφουν None όταν δεν ισχύουν οι προϋποθέσεις τους).
+Σειρά τελεστών: move_left, move_right, unload.
+'''
+
 def find_children(state):
     
     children=[]
@@ -98,6 +125,9 @@ def find_children(state):
 
     right_state=copy.deepcopy(state)
     right_child=move_right(right_state)
+
+    unload_state=copy.deepcopy(state)
+    unload_child=unload(unload_state)
     
     if left_child!=None: 
         children.append(left_child)
@@ -105,8 +135,8 @@ def find_children(state):
     if right_child!=None:
         children.append(right_child)
         
-    
-    
+    if unload_child!=None:
+        children.append(unload_child)
     
     return children
 
@@ -187,8 +217,15 @@ def extend_queue(queue, method):
 **** Problem depending functions
 **** ο κόσμος του προβλήματος (αν απαιτείται) και υπόλοιπες συναρτήσεις σχετικές με το πρόβλημα
 
-  #### to be  added ####
 """
+
+def shelves_empty(state):
+    """True αν δεν έχει μείνει κανένα δέμα σε καμία από τις θέσεις 1..5."""
+    for i in range(1, NUM_POSITIONS+1):
+        for parcel in state[i]:
+            if parcel>0:
+                return False
+    return True
 
 """ Function that checks if current state is a goal state """
 
